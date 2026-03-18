@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>即时零售比价工具</title>
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #ff6a00;
+            --primary-dark: #e55e00;
+            --secondary-color: #1890ff;
+            --success-color: #52c41a;
+            --warning-color: #faad14;
+            --error-color: #ff4d4f;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --text-light: #999999;
+            --bg-light: #f5f7fa;
+            --bg-white: #ffffff;
+            --border-color: #e8e8e8;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: var(--bg-white);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 页面切换 */
+        .page {
+            display: none;
+            min-height: 100vh;
+            padding: 40px 24px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 欢迎页 */
+        .welcome-content {
+            text-align: center;
+        }
+
+        .logo {
+            margin-bottom: 32px;
+        }
+
+        .logo-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .tagline {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        .features {
+            margin-bottom: 48px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: var(--bg-light);
+            border-radius: 12px;
+            gap: 12px;
+        }
+
+        .feature-icon {
+            font-size: 24px;
+        }
+
+        .feature-item span {
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+
+        /* 按钮样式 */
+        .primary-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: var(--shadow);
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .primary-btn:active {
+            transform: translateY(0);
+        }
+
+        .secondary-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg-white);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .secondary-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .text-btn {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: var(--text-light);
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .text-btn:hover {
+            color: var(--text-secondary);
+        }
+
+        /* 登录页 */
+        .login-content {
+            text-align: center;
+        }
+
+        .login-content h2 {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .login-hint {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .qr-container {
+            background: var(--bg-light);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .qr-code {
+            width: 240px;
+            height: 240px;
+            margin: 0 auto 24px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+        }
+
+        .qr-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qr-loading {
+            text-align: center;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .qr-tips {
+            text-align: left;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .qr-tips p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .qr-tips p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 处理页 */
+        .processing-content {
+            text-align: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .processing-content h2 {
+            font-size: 24px;
+            margin-bottom: 40px;
+        }
+
+        .progress-container {
+            margin-bottom: 32px;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 0 8px;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+
+        .step.active {
+            opacity: 1;
+        }
+
+        .step.completed {
+            opacity: 1;
+        }
+
+        .step-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .step-label {
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .step-status {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .step.active .step-status {
+            color: var(--primary-color);
+        }
+
+        .step.completed .step-status {
+            color: var(--success-color);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-light);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        #progress-percent {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .stats-preview {
+            display: flex;
+            justify-content: space-around;
+            padding: 24px;
+            background: var(--bg-light);
+            border-radius: 12px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* 结果页 */
+        .result-content {
+            padding-top: 20px;
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .result-header h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .result-subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .highlight {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .summary-card {
+            background: var(--bg-light);
+            padding: 16px 12px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .summary-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .summary-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .results-section {
+            margin-bottom: 32px;
+        }
+
+        .results-section h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .deals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .deal-item {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg-light);
+            border-radius: 12px;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .deal-item:hover {
+            border-color: var(--primary-color);
+        }
+
+        .deal-image {
+            width: 80px;
+            height: 80px;
+            background: #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .deal-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .deal-title {
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .deal-prices {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .original-price {
+            font-size: 14px;
+            color: var(--text-light);
+            text-decoration: line-through;
+        }
+
+        .compare-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .deal-savings {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #fff3e0;
+            color: var(--primary-color);
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .deal-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .view-btn {
+            flex: 1;
+            padding: 8px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .view-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .result-actions .primary-btn {
+            flex: 2;
+        }
+
+        .result-actions .secondary-btn {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        /* 滚动条样式 */
+        .deals-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .deals-list::-webkit-scrollbar-track {
+            background: var(--bg-light);
+            border-radius: 3px;
+        }
+
+        .deals-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .deals-list::-webkit-scrollbar-thumb:hover {
+            background: var(--text-light);
+        }
+
+        /* 响应式 */
+        @media (max-width: 380px) {
+            .app-container {
+                max-width: 100%;
+            }
+            
+            .logo h1 {
+                font-size: 24px;
+            }
+            
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .progress-steps {
+                flex-direction: column;
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 页面 1: 欢迎页 -->
+        <div id="welcome-page" class="page active">
+            <div class="welcome-content">
+                <div class="logo">
+                    <div class="logo-icon">🔍</div>
+                    <h1>即时零售比价工具</h1>
+                </div>
+                <p class="tagline">智能比价 · 省钱省心</p>
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">📦</div>
+                        <span>自动抓取历史订单</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🏭</div>
+                        <span>1688 源头工厂比价</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">💰</div>
+                        <span>智能推荐低价好物</span>
+                    </div>
+                </div>
+                <button id="start-btn" class="primary-btn">开始使用</button>
+            </div>
+        </div>
+
+        <!-- 页面 2: 扫码登录页 -->
+        <div id="login-page" class="page">
+            <div class="login-content">
+                <h2>扫码登录</h2>
+                <p class="login-hint">请使用淘宝/1688 APP 扫码授权</p>
+                <div class="qr-container">
+                    <div id="qr-code" class="qr-code">
+                        <!-- 二维码将通过 JS 动态生成 -->
+                        <div class="qr-placeholder">
+                            <div class="qr-loading">
+                                <div class="spinner"></div>
+                                <p>生成二维码中...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="qr-tips">
+                        <p>⏱️ 二维码 5 分钟内有效</p>
+                        <p>🔒 安全授权，仅用于比价</p>
+                    </div>
+                </div>
+                <button id="refresh-qr-btn" class="secondary-btn">刷新二维码</button>
+                <button id="cancel-login-btn" class="text-btn">取消</button>
+            </div>
+        </div>
+
+        <!-- 页面 3: 比价进行中页 -->
+        <div id="processing-page" class="page">
+            <div class="processing-content">
+                <div class="user-info">
+                    <div class="avatar">👤</div>
+                    <span id="user-name">用户</span>
+                </div>
+                <h2>比价进行中</h2>
+                <div class="progress-container">
+                    <div class="progress-steps">
+                        <div class="step active" id="step-1">
+                            <div class="step-icon">📥</div>
+                            <div class="step-label">抓取订单</div>
+                            <div class="step-status">进行中...</div>
+                        </div>
+                        <div class="step" id="step-2">
+                            <div class="step-icon">🔍</div>
+                            <div class="step-label">1688 比价</div>
+                            <div class="step-status">等待中</div>
+                        </div>
+                        <div class="step" id="step-3">
+                            <div class="step-icon">✅</div>
+                            <div class="step-label">生成报告</div>
+                            <div class="step-status">等待中</div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="progress-info">
+                        <span id="progress-text">正在分析您的订单...</span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                </div>
+                <div class="stats-preview">
+                    <div class="stat-item">
+                        <div class="stat-value" id="orders-count">0</div>
+                        <div class="stat-label">已分析订单</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="potential-savings">¥0</div>
+                        <div class="stat-label">预计节省</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页面 4: 比价结果页 -->
+        <div id="result-page" class="page">
+            <div class="result-content">
+                <div class="result-header">
+                    <h2>🎉 比价完成！</h2>
+                    <p class="result-subtitle">已为您找到 <span id="deals-count" class="highlight">0</span> 个更优选择</p>
+                </div>
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="summary-icon">💰</div>
+                        <div class="summary-value" id="total-savings">¥0</div>
+                        <div class="summary-label">总共可节省</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">📦</div>
+                        <div class="summary-value" id="items-found">0</div>
+                        <div class="summary-label">找到同款商品</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">📉</div>
+                        <div class="summary-value" id="avg-discount">0%</div>
+                        <div class="summary-label">平均折扣</div>
+                    </div>
+                </div>
+                <div class="results-section">
+                    <h3>推荐商品</h3>
+                    <div id="deals-list" class="deals-list">
+                        <!-- 商品列表将通过 JS 动态生成 -->
+                    </div>
+                </div>
+                <div class="result-actions">
+                    <button id="export-btn" class="secondary-btn">导出报告</button>
+                    <button id="new-compare-btn" class="primary-btn">重新比价</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 即时零售比价工具 - 主逻辑
+
+        class PriceCompareApp {
+            constructor() {
+                this.currentPage = 'welcome-page';
+                this.user = null;
+                this.orders = [];
+                this.deals = [];
+                this.progress = 0;
+                
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.showPage('welcome-page');
+            }
+
+            // 绑定事件
+            bindEvents() {
+                // 开始按钮
+                document.getElementById('start-btn')?.addEventListener('click', () => {
+                    this.showPage('login-page');
+                    this.generateQRCode();
+                });
+
+                // 刷新二维码
+                document.getElementById('refresh-qr-btn')?.addEventListener('click', () => {
+                    this.generateQRCode();
+                });
+
+                // 取消登录
+                document.getElementById('cancel-login-btn')?.addEventListener('click', () => {
+                    this.showPage('welcome-page');
+                });
+
+                // 导出报告
+                document.getElementById('export-btn')?.addEventListener('click', () => {
+                    this.exportReport();
+                });
+
+                // 重新比价
+                document.getElementById('new-compare-btn')?.addEventListener('click', () => {
+                    this.startNewCompare();
+                });
+            }
+
+            // 页面切换
+            showPage(pageId) {
+                document.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                });
+                document.getElementById(pageId)?.classList.add('active');
+                this.currentPage = pageId;
+            }
+
+            // 生成二维码（模拟）
+            generateQRCode() {
+                const qrContainer = document.getElementById('qr-code');
+                if (!qrContainer) return;
+
+                qrContainer.innerHTML = `
+                    <div class="qr-placeholder">
+                        <div class="qr-loading">
+                            <div class="spinner"></div>
+                            <p>生成二维码中...</p>
+                        </div>
+                    </div>
+                `;
+
+                // 模拟 API 调用延迟
+                setTimeout(() => {
+                    // 使用简单的 QR 码占位图
+                    qrContainer.innerHTML = `
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='white' width='200' height='200'/%3E%3Cg fill='black'%3E%3Crect x='20' y='20' width='60' height='60'/%3E%3Crect x='120' y='20' width='60' height='60'/%3E%3Crect x='20' y='120' width='60' height='60'/%3E%3Crect x='100' y='100' width='20' height='20'/%3E%3Crect x='140' y='140' width='20' height='20'/%3E%3Crect x='80' y='40' width='10' height='10'/%3E%3Crect x='40' y='80' width='10' height='10'/%3E%3Crect x='160' y='60' width='10' height='10'/%3E%3Crect x='120' y='100' width='10' height='10'/%3E%3Crect x='60' y='140' width='10' height='10'/%3E%3Crect x='100' y='160' width='10' height='10'/%3E%3Crect x='140' y='80' width='10' height='10'/%3E%3Crect x='80' y='120' width='10' height='10'/%3E%3Crect x='160' y='160' width='10' height='10'/%3E%3Crect x='40' y='160' width='10' height='10'/%3E%3Crect x='180' y='100' width='10' height='10'/%3E%3Crect x='20' y='180' width='10' height='10'/%3E%3Crect x='100' y='60' width='10' height='10'/%3E%3Crect x='60' y='100' width='10' height='10'/%3E%3Crect x='140' y='120' width='10' height='10'/%3E%3Crect x='180' y='140' width='10' height='10'/%3E%3Crect x='80' y='180' width='10' height='10'/%3E%3Crect x='120' y='140' width='10' height='10'/%3E%3Crect x='160' y='100' width='10' height='10'/%3E%3Crect x='40' y='120' width='10' height='10'/%3E%3Crect x='100' y='140' width='10' height='10'/%3E%3Crect x='60' y='160' width='10' height='10'/%3E%3Crect x='140' y='160' width='10' height='10'/%3E%3Crect x='180' y='180' width='10' height='10'/%3E%3Crect x='80' y='80' width='10' height='10'/%3E%3Crect x='120' y='80' width='10' height='10'/%3E%3Crect x='160' y='180' width='10' height='10'/%3E%3C/g%3E%3C/svg%3E" alt="QR Code" style="width: 100%; height: 100%; object-fit: contain;">
+                    `;
+
+                    // 模拟用户扫码登录
+                    this.simulateLogin();
+                }, 1500);
+            }
+
+            // 模拟登录过程
+            simulateLogin() {
+                setTimeout(() => {
+                    this.user = {
+                        name: '用户' + Math.random().toString(36).substr(2, 4).toUpperCase(),
+                        avatar: '👤'
+                    };
+                    
+                    document.getElementById('user-name').textContent = this.user.name;
+                    this.showPage('processing-page');
+                    this.startProcessing();
+                }, 3000); // 3 秒后模拟扫码成功
+            }
+
+            // 开始处理比价
+            startProcessing() {
+                this.progress = 0;
+                this.orders = [];
+                this.deals = [];
+
+                // 步骤 1: 抓取订单
+                this.updateStep(1, 'active');
+                this.simulateOrderFetching();
+            }
+
+            // 模拟订单抓取
+            simulateOrderFetching() {
+                const totalOrders = Math.floor(Math.random() * 10) + 5; // 5-15 个订单
+                let fetched = 0;
+
+                const interval = setInterval(() => {
+                    fetched++;
+                    this.orders.push({
+                        id: fetched,
+                        name: `商品${fetched}`,
+                        price: Math.floor(Math.random() * 200) + 50,
+                        platform: '淘宝/京东'
+                    });
+
+                    document.getElementById('orders-count').textContent = fetched;
+                    this.updateProgress((fetched / totalOrders) * 33);
+
+                    if (fetched >= totalOrders) {
+                        clearInterval(interval);
+                        setTimeout(() => this.startComparing(), 500);
+                    }
+                }, 300);
+            }
+
+            // 开始 1688 比价
+            startComparing() {
+                this.updateStep(1, 'completed');
+                this.updateStep(2, 'active');
+
+                let compared = 0;
+                const interval = setInterval(() => {
+                    compared++;
+                    
+                    // 模拟找到一些优惠商品
+                    if (Math.random() > 0.4) {
+                        const order = this.orders[compared - 1];
+                        if (order) {
+                            const savings = Math.floor(order.price * (Math.random() * 0.3 + 0.2)); // 节省 20-50%
+                            this.deals.push({
+                                id: compared,
+                                title: `${order.name} - 1688 同款`,
+                                originalPrice: order.price,
+                                comparePrice: order.price - savings,
+                                savings: savings,
+                                image: '📦',
+                                link: 'https://www.1688.com'
+                            });
+                        }
+                    }
+
+                    const totalSavings = this.deals.reduce((sum, deal) => sum + deal.savings, 0);
+                    document.getElementById('potential-savings').textContent = `¥${totalSavings}`;
+                    this.updateProgress(33 + (compared / this.orders.length) * 33);
+
+                    if (compared >= this.orders.length) {
+                        clearInterval(interval);
+                        setTimeout(() => this.generateReport(), 500);
+                    }
+                }, 400);
+            }
+
+            // 生成报告
+            generateReport() {
+                this.updateStep(2, 'completed');
+                this.updateStep(3, 'active');
+
+                setTimeout(() => {
+                    this.updateStep(3, 'completed');
+                    this.updateProgress(100);
+                    this.showResults();
+                }, 1000);
+            }
+
+            // 更新步骤状态
+            updateStep(stepNum, status) {
+                const step = document.getElementById(`step-${stepNum}`);
+                if (!step) return;
+
+                step.className = `step ${status}`;
+                
+                const statusEl = step.querySelector('.step-status');
+                if (statusEl) {
+                    switch(status) {
+                        case 'active':
+                            statusEl.textContent = '进行中...';
+                            break;
+                        case 'completed':
+                            statusEl.textContent = '已完成';
+                            break;
+                        default:
+                            statusEl.textContent = '等待中';
+                    }
+                }
+            }
+
+            // 更新进度
+            updateProgress(percent) {
+                this.progress = percent;
+                const fill = document.getElementById('progress-fill');
+                const percentText = document.getElementById('progress-percent');
+                const progressText = document.getElementById('progress-text');
+
+                if (fill) fill.style.width = `${percent}%`;
+                if (percentText) percentText.textContent = `${Math.round(percent)}%`;
+                
+                if (progressText) {
+                    if (percent < 33) {
+                        progressText.textContent = '正在分析您的订单...';
+                    } else if (percent < 66) {
+                        progressText.textContent = '正在 1688 比价中...';
+                    } else {
+                        progressText.textContent = '正在生成报告...';
+                    }
+                }
+            }
+
+            // 显示结果
+            showResults() {
+                this.showPage('result-page');
+
+                // 更新统计数据
+                const totalSavings = this.deals.reduce((sum, deal) => sum + deal.savings, 0);
+                const avgDiscount = this.deals.length > 0 
+                    ? Math.round((this.deals.reduce((sum, deal) => sum + (deal.savings / deal.originalPrice), 0) / this.deals.length) * 100)
+                    : 0;
+
+                document.getElementById('deals-count').textContent = this.deals.length;
+                document.getElementById('total-savings').textContent = `¥${totalSavings}`;
+                document.getElementById('items-found').textContent = this.deals.length;
+                document.getElementById('avg-discount').textContent = `${avgDiscount}%`;
+
+                // 渲染商品列表
+                this.renderDealsList();
+            }
+
+            // 渲染商品列表
+            renderDealsList() {
+                const container = document.getElementById('deals-list');
+                if (!container) return;
+
+                if (this.deals.length === 0) {
+                    container.innerHTML = `
+                        <div class="deal-item" style="justify-content: center; padding: 32px;">
+                            <p style="color: var(--text-secondary);">暂无优惠商品，继续加油！</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = this.deals.map(deal => `
+                    <div class="deal-item">
+                        <div class="deal-image">${deal.image}</div>
+                        <div class="deal-info">
+                            <div class="deal-title">${deal.title}</div>
+                            <div class="deal-prices">
+                                <span class="original-price">¥${deal.originalPrice}</span>
+                                <span class="compare-price">¥${deal.comparePrice}</span>
+                                <span class="deal-savings">省¥${deal.savings}</span>
+                            </div>
+                            <div class="deal-actions">
+                                <button class="view-btn" onclick="app.viewDeal(${deal.id})">查看详情</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // 查看商品详情
+            viewDeal(dealId) {
+                const deal = this.deals.find(d => d.id === dealId);
+                if (deal) {
+                    alert(`商品：${deal.title}\n原价：¥${deal.originalPrice}\n1688 价：¥${deal.comparePrice}\n节省：¥${deal.savings}\n\n即将跳转到 1688...`);
+                }
+            }
+
+            // 导出报告
+            exportReport() {
+                const totalSavings = this.deals.reduce((sum, deal) => sum + deal.savings, 0);
+                const report = `
+即时零售比价报告
+================
+生成时间：${new Date().toLocaleString('zh-CN')}
+用户：${this.user?.name || '未知'}
+
+总结
+----
+分析订单数：${this.orders.length}
+找到优惠：${this.deals.length} 个
+总共可省：¥${totalSavings}
+
+优惠商品列表
+------------
+${this.deals.map(deal => 
+    `${deal.title}
+    原价：¥${deal.originalPrice} → 1688 价：¥${deal.comparePrice} (省¥${deal.savings})`
+).join('\n\n')}
+                `.trim();
+
+                // 创建下载
+                const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `比价报告_${new Date().getTime()}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                alert('报告已导出！');
+            }
+
+            // 开始新的比价
+            startNewCompare() {
+                this.showPage('processing-page');
+                this.startProcessing();
+            }
+        }
+
+        // 初始化应用
+        const app = new PriceCompareApp();
+    </script>
+</body>
+</html>
